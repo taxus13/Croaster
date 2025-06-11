@@ -3,9 +3,10 @@
 #include "DeviceIdentity.h"
 #include <Wire.h>
 
-DisplayManager::DisplayManager(CroasterCore &croaster, uint8_t i2cAddr)
+DisplayManager::DisplayManager(CroasterCore &croaster, const DHTHandler& dhtHandler, uint8_t i2cAddr)
     : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET),
       croaster(&croaster),
+      dhtHandler(dhtHandler),
       i2cAddress(i2cAddr)
 {
 }
@@ -39,7 +40,7 @@ void DisplayManager::drawHeader()
     if (!hasDisplay)
         return;
 
-    String text = "CROASTER V" + String(version);
+    String text = "CROASTER " + String(dhtHandler.getTemperature(), 1) + "C " + String(dhtHandler.getHumidity(), 0) + "%" ;
 
     if (isIpShowed && !ipAddr.isEmpty())
     {

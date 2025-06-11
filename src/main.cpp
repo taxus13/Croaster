@@ -21,12 +21,14 @@
 #include "CroasterCore.h"
 #include "DisplayManager.h"
 #include "CommandHandler.h"
+#include "DHTHandler.h"
 
 
 // === Global Instances ===
 CroasterCore croaster(dummyMode);
 
-DisplayManager displayManager(croaster);
+DHTHandler dhtHandler;
+DisplayManager displayManager(croaster, dhtHandler);
 
 CommandHandler commandHandler(croaster, displayManager);
 
@@ -38,6 +40,7 @@ BleManager bleManager(croaster, commandHandler);
 WebSocketManager wsManager(croaster, commandHandler);
 #endif
 
+
 // === Arduino Setup ===
 void setup()
 {
@@ -47,7 +50,7 @@ void setup()
   // Initialize managers
   setupWiFiManager(croaster.ssidName());
   #endif
-
+  dhtHandler.begin();
   commandHandler.begin();
 
 #if defined(ESP32) and USE_BLE
@@ -63,7 +66,7 @@ void setup()
 void loop()
 {
   croaster.loop();
-  
+  dhtHandler.loop();
 #if USE_WEBSOCKET
   processWiFiManager();
   wsManager.loop();

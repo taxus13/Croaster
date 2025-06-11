@@ -3,6 +3,7 @@
 #include <Adafruit_SSD1306.h>
 #include "Constants.h"
 #include "CroasterCore.h"
+#include "DHTHandler.h"
 
 /**
  * @class DisplayManager
@@ -14,6 +15,7 @@ private:
     Adafruit_SSD1306 display;
 
     CroasterCore *croaster = nullptr;
+    const DHTHandler& dhtHandler;
 
     uint8_t i2cAddress;
 
@@ -71,7 +73,7 @@ public:
      * @param croaster Reference to the CroasterCore instance.
      * @param i2cAddress The I2C address of the display (default is 0x3C).
      */
-    DisplayManager(CroasterCore &croaster, uint8_t i2cAddress = 0x3C);
+    DisplayManager(CroasterCore &croaster, const DHTHandler& dhtHandler, uint8_t i2cAddress = 0x3C);
 
     /**
      * @brief Initializes the display.
