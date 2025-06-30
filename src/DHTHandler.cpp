@@ -1,6 +1,6 @@
 #include "DHTHandler.h"
 
-DHTHandler::DHTHandler() : dht(GPIO_NUM_4, DHT22) {
+DHTHandler::DHTHandler(uint8_t pin) : dht(pin, DHT22) {
 
 }
 

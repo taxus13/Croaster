@@ -4,6 +4,8 @@
 #include "Constants.h"
 #include "CroasterCore.h"
 #include "DHTHandler.h"
+#include "NTCHandler.h"
+#include "RoasterControl.h"
 
 /**
  * @class DisplayManager
@@ -16,6 +18,8 @@ private:
 
     CroasterCore *croaster = nullptr;
     const DHTHandler& dhtHandler;
+    const NTCHandler& ntcHandler;
+    const RoasterControl& roasterControl;
 
     uint8_t i2cAddress;
 
@@ -55,6 +59,9 @@ private:
      */
     void drawTemperature(String label, double temp, double ror, int yCursor);
 
+    void drawPlainTemperature(String label, double temp, int yCursor);
+    void drawPowerLevel(String label, int32_t percentage, int yCursor);
+
     /**
      * @brief Displays the splash screen.
      */
@@ -73,7 +80,7 @@ public:
      * @param croaster Reference to the CroasterCore instance.
      * @param i2cAddress The I2C address of the display (default is 0x3C).
      */
-    DisplayManager(CroasterCore &croaster, const DHTHandler& dhtHandler, uint8_t i2cAddress = 0x3C);
+    DisplayManager(CroasterCore &croaster, const DHTHandler& dhtHandler, const NTCHandler& ntcHandler, const RoasterControl& roasterControl, uint8_t i2cAddress = 0x3C);
 
     /**
      * @brief Initializes the display.

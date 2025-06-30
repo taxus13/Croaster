@@ -9,7 +9,7 @@ private:
     float temperature = 0;
     float humidity = 0;
 public:
-    DHTHandler();
+    DHTHandler(uint8_t pin);
     float getTemperature() const;
     float getHumidity() const;
     void begin();

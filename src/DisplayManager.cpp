@@ -3,10 +3,12 @@
 #include "DeviceIdentity.h"
 #include <Wire.h>
 
-DisplayManager::DisplayManager(CroasterCore &croaster, const DHTHandler& dhtHandler, uint8_t i2cAddr)
+DisplayManager::DisplayManager(CroasterCore &croaster, const DHTHandler& dhtHandler, const NTCHandler& ntcHandler, const RoasterControl& roasterControl, uint8_t i2cAddr)
     : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET),
       croaster(&croaster),
       dhtHandler(dhtHandler),
+      ntcHandler(ntcHandler),
+      roasterControl(roasterControl),
       i2cAddress(i2cAddr)
 {
 }
@@ -54,8 +56,7 @@ void DisplayManager::drawHeader()
 
 void DisplayManager::drawTemperature(String label, double temp, double ror, int yCursor)
 {
-    if (!hasDisplay)
-        return;
+    if (!hasDisplay) return;
 
     String tempText = isnan(temp) ? "N/A" : String(temp, 1) + tempUnit;
     int tempX = display.width() - (18 * tempText.length()) + 3;
@@ -79,6 +80,33 @@ void DisplayManager::drawTemperature(String label, double temp, double ror, int 
         display.setCursor(0, yCursor + 14);
         display.print(rorText);
     }
+}
+
+void DisplayManager::drawPlainTemperature(String label, double temp, int yCursor)
+{
+    if (!hasDisplay) return;
+
+    String tempText = isnan(temp) ? "N/A" : label + String(temp, 1) + tempUnit;
+    int tempX = display.width() - (12 * tempText.length()) + 3;
+
+    display.setTextSize(2);
+    display.setCursor(tempX, yCursor);
+    display.print(tempText);
+
+}
+
+void DisplayManager::drawPowerLevel(String label, int32_t percentage, int yCursor)
+{
+    if (!hasDisplay) return;
+
+    display.setTextSize(1);
+    display.setCursor(0, yCursor);
+    display.print(label);
+
+    display.setTextSize(1);
+    display.setCursor(0, yCursor + 14);
+    display.print(String(percentage) + "%");
+
 }
 
 void DisplayManager::splash()
@@ -150,8 +178,14 @@ void DisplayManager::loop()
         display.clearDisplay();
         drawHeader();
 
-        drawTemperature("BT", bt, rorBt, 16);
-        drawTemperature("ET", et, rorEt, 43);
+        // drawTemperature("BT", bt, rorBt, 16);
+        // drawTemperature("ET", et, rorEt, 43);
+
+        drawPlainTemperature("I ", ntcHandler.getTemperature(), 14);
+        drawPlainTemperature("B ", bt, 32);
+        drawPlainTemperature("E ", et, 50);
+        drawPowerLevel("Fan", roasterControl.getFanLevel(), 16);
+        drawPowerLevel("Heat", roasterControl.getHeatLevel(), 43);
 
         display.display();
     }

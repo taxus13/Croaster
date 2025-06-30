@@ -52,7 +52,7 @@ void RoasterControl::setFan(int32_t percentage)
     if (percentage < MIN_FAN_LEVEL) {
         Serial.printf("Fan percentage too low: %d\n", percentage);
     }
-    fanLevel = percentage
+    fanLevel = percentage;
 
     Serial.printf("Received fan percentage. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 }

@@ -23,16 +23,18 @@
 #include "CommandHandler.h"
 #include "DHTHandler.h"
 #include "RoasterControl.h"
+#include "PinConfig.h"
+#include "NTCHandler.h"
 
 
 // === Global Instances ===
 CroasterCore croaster(dummyMode);
 
-DHTHandler dhtHandler;
-DisplayManager displayManager(croaster, dhtHandler);
+DHTHandler dhtHandler(DHT22_PIN);
+NTCHandler ntcHandler(NTC_PIN, 5);
 
 RoasterControl roasterControl;
-
+DisplayManager displayManager(croaster, dhtHandler, ntcHandler, roasterControl);
 CommandHandler commandHandler(croaster, displayManager, roasterControl);
 
 #if defined(ESP32) and USE_BLE
@@ -69,6 +71,7 @@ void setup()
 void loop()
 {
   croaster.loop();
+  ntcHandler.loop();
   dhtHandler.loop();
 #if USE_WEBSOCKET
   processWiFiManager();

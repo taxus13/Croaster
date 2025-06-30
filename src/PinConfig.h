@@ -16,4 +16,10 @@
 #define SO_PIN MISO
 #define CS_PIN_BT SS
 #define CS_PIN_ET MOSI
+
+#define DHT22_PIN GPIO_NUM_4
+#define NTC_PIN GPIO_NUM_25
+#define SSR_MOTOR_PIN GPIO_NUM_26
+#define SSR_HEATER_PIN GPIO_NUM_27
+
 #endif
