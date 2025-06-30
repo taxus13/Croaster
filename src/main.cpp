@@ -22,6 +22,7 @@
 #include "DisplayManager.h"
 #include "CommandHandler.h"
 #include "DHTHandler.h"
+#include "RoasterControl.h"
 
 
 // === Global Instances ===
@@ -30,7 +31,9 @@ CroasterCore croaster(dummyMode);
 DHTHandler dhtHandler;
 DisplayManager displayManager(croaster, dhtHandler);
 
-CommandHandler commandHandler(croaster, displayManager);
+RoasterControl roasterControl;
+
+CommandHandler commandHandler(croaster, displayManager, roasterControl);
 
 #if defined(ESP32) and USE_BLE
 BleManager bleManager(croaster, commandHandler);

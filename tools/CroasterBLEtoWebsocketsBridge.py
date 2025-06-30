@@ -30,13 +30,13 @@ async def find_croaster():
     devices = await BleakScanner.discover()
     for d in devices:
         logging.debug(str(d))
-        if d.name is not None and "[C4C4]" in d.name:
+        if d.name is not None and "Croaster" in d.name:
             logging.info("Found device " + d.name )
             return d
     return None
 
 async def request_handler(websocket):
-    global ble_queue, first_time
+    global ble_queue, first_time, croaster_client
     try:
         while True:
             message = await websocket.recv()
@@ -65,7 +65,8 @@ async def request_handler(websocket):
                 logging.info(f"Response for {response_id}: ET: {et:.2f}C, BT {bt:.2f}C (delay: {elapsed_time_ms:.0f}ms, age: {data_age_ms:.0f}ms)")
                 await websocket.send(response_json)
             else:
-                logging.warning(f"Unknown command {decoded_message['command']}")
+                logging.info(f"Sending command {decoded_message['command']} to Croaster")
+                await croaster_client.write_gatt_char(DATA_UUID, str.encode(message))
     except ConnectionClosedOK:
         logging.info("Artisan disconnected")
 

@@ -8,8 +8,9 @@
 #include <ESP8266WiFi.h>
 #endif
 
-CommandHandler::CommandHandler(CroasterCore &core, DisplayManager &display)
-    : croaster(core), displayManager(display) {}
+CommandHandler::CommandHandler(CroasterCore &core, DisplayManager &display, RoasterControl& roasterControl)
+
+    : croaster(core), displayManager(display), roasterControl(roasterControl) {}
 
 void CommandHandler::begin()
 {
@@ -82,7 +83,7 @@ void CommandHandler::handleBasicCommand(const JsonObject &json, String &response
         return;
 
     String command = json["command"].as<String>();
-
+    debugln(command);
     if (command == "getArtisanData")
     {
         int id = json["id"].as<int>();
@@ -116,6 +117,21 @@ void CommandHandler::handleBasicCommand(const JsonObject &json, String &response
     else if (command == "blink")
     {
         blinkBuiltinLED();
+    }
+    else if (command == "startRoast")
+    {
+        debugln("Received start");
+        roasterControl.startRoast();
+    }
+    else if (command == "stopRoast")
+    {
+        debugln("Received stop");
+        roasterControl.stopRoast();
+    }
+    else if (command == "startCool")
+    {
+        debugln("Received cool");
+        roasterControl.startCool();
     }
 }
 
@@ -164,6 +180,16 @@ void CommandHandler::handleJsonCommand(const JsonObject &json, String &responseO
             debugln("# Connecting to " + ssid);
         }
     }
+
+    if (json["setFan"].is<double>() || json["setFan"].is<int>()) {
+        debugln("Received fan");
+        roasterControl.setFan(json["setFan"].as<int>());
+    } 
+    
+    if (json["setHeat"].is<double>()|| json["setHeat"].is<int>()) {
+        debugln("Received heat");
+        roasterControl.setHeat(json["setHeat"].as<int>());
+    } 
 }
 
 void CommandHandler::blinkBuiltinLED(uint8_t times, unsigned long blinkDelay)

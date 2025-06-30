@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include "CroasterCore.h"
 #include "DisplayManager.h"
+#include "RoasterControl.h"
 
 #define LED_ON LOW
 #define LED_OFF HIGH
@@ -16,6 +17,7 @@ class CommandHandler
 private:
     CroasterCore &croaster;
     DisplayManager &displayManager;
+    RoasterControl &roasterControl;
 
     bool blinking = false;
     uint8_t blinkCount = 0;
@@ -53,7 +55,7 @@ public:
      * @param core Reference to the CroasterCore instance.
      * @param display Reference to the DisplayManager instance.
      */
-    CommandHandler(CroasterCore &core, DisplayManager &display);
+    CommandHandler(CroasterCore &core, DisplayManager &display, RoasterControl& roasterControl);
 
     /**
      * @brief Initializes the CommandHandler.
