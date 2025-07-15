@@ -5,7 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-static constexpr int32_t MIN_FAN_LEVEL_FOR_HEAT = 50; // Minimum heat level is heat is on
+static constexpr int32_t MIN_FAN_LEVEL_FOR_HEAT = 30; // Minimum heat level is heat is on
 static constexpr int32_t MIN_HEAT_LEVEL = 0;
 static constexpr int32_t MIN_FAN_LEVEL = 0;
 static constexpr int32_t MAX_LEVEL = 100;

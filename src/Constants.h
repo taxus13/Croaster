@@ -22,8 +22,8 @@ const bool dummyMode = false;
 
 static constexpr double INITIAL_INTERVAL_SEND_S = 1;
 
-static constexpr int CYCLE_TIME_FAN_MS = 1000;
-static constexpr int CYCLE_TIME_HEAT_MS = 10000;
+static constexpr int CYCLE_TIME_FAN_MS = 50;
+static constexpr int CYCLE_TIME_HEAT_MS = 5000;
 
 
 // Smoothing factor of a temperature value

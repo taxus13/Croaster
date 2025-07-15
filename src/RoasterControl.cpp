@@ -37,13 +37,13 @@ void RoasterControl::SSRTaskFan(const uint8_t ssr_pin, const int32_t cycle_ms, v
         int onTime = (cycle_ms * level) / 100;
         if (onTime > 0) {
             digitalWrite(ssr_pin, HIGH);
-            Serial.printf("Pin %d on\n", ssr_pin);
+            // Serial.printf("Pin %d on\n", ssr_pin);
             vTaskDelay(pdMS_TO_TICKS(onTime));
         }
         int offTime  = (cycle_ms * (100 - level)) / 100;
         if (offTime > 0) {
             digitalWrite(ssr_pin, LOW);
-            Serial.printf("Pin %d off\n", ssr_pin);
+            // Serial.printf("Pin %d off\n", ssr_pin);
             vTaskDelay(pdMS_TO_TICKS(offTime));
         }
     }
@@ -53,31 +53,37 @@ void RoasterControl::SSRTaskHeater(const uint8_t ssr_pin, const int32_t cycle_ms
 {
     const int sleep_duration = pdMS_TO_TICKS(100);
     int last_level = 0;
+
     while (true) {
-        last_level = level;
-        int onTime = pdMS_TO_TICKS((cycle_ms * last_level) / 100);
-        if (onTime > 0) {
-            digitalWrite(ssr_pin, HIGH);
-            Serial.printf("Pin %d on\n", ssr_pin);
-            for (int total_sleep_time = 0; total_sleep_time < onTime; total_sleep_time += sleep_duration) {
-                vTaskDelay(sleep_duration);
-                if (last_level != level) {
-                    Serial.println("Level changed");
-                    break;
+        {
+            last_level = level;
+            int onTime = pdMS_TO_TICKS((cycle_ms * last_level) / 100);
+            Serial.printf("level: %d onTime: %d\n",last_level, onTime);
+            if (onTime > 0) {
+                digitalWrite(ssr_pin, HIGH);
+                // Serial.printf("Pin %d on\n", ssr_pin);
+                for (int total_sleep_time = 0; total_sleep_time < onTime; total_sleep_time += sleep_duration) {
+                    vTaskDelay(sleep_duration);
+                    if (last_level != level) {
+                        Serial.printf("Level changed from %d to %d (was in on state)\n", last_level, level);
+                        break;
+                    }
                 }
             }
         }
-
-        last_level = level;
-        int offTime  = (cycle_ms * (100 - last_level)) / 100;
-        if (offTime > 0) {
-            digitalWrite(ssr_pin, LOW);
-            Serial.printf("Pin %d off\n", ssr_pin);
-            for (int total_sleep_time = 0; total_sleep_time < offTime; total_sleep_time += sleep_duration) {
-                vTaskDelay(sleep_duration);
-                if (last_level != level) {
-                    Serial.println("Level changed");
-                    break;
+        {
+            last_level = level;
+            int offTime  = (cycle_ms * (100 - last_level)) / 100;
+            Serial.printf("level: %d offTime: %d\n",last_level, offTime);
+            if (offTime > 0) {
+                digitalWrite(ssr_pin, LOW);
+                // Serial.printf("Pin %d off\n", ssr_pin);
+                for (int total_sleep_time = 0; total_sleep_time < offTime; total_sleep_time += sleep_duration) {
+                    vTaskDelay(sleep_duration);
+                    if (last_level != level) {
+                        Serial.printf("Level changed from %d to %d (was in off state)\n", last_level, level);
+                        break;
+                    }
                 }
             }
         }
@@ -106,7 +112,7 @@ void RoasterControl::startCool()
     heatLevel = 0;
     fanLevel = MAX_LEVEL;
     // Immedietly disable the heating element and turn on the fan
-    stopTask(heatTaskHandle);
+    // stopTask(heatTaskHandle);
     digitalWrite(SSR_FAN_PIN, HIGH);
     digitalWrite(SSR_HEATER_PIN, LOW);
     Serial.printf("startCool. Current values H=%d,F=%d\n", heatLevel, fanLevel);
@@ -117,8 +123,8 @@ void RoasterControl::stopRoast()
     heatLevel = 0;
     fanLevel = 0;
     // Immedietly disable the fan and the heater
-    stopTask(heatTaskHandle);
-    stopTask(fanTaskHandle);
+    // stopTask(heatTaskHandle);
+    // stopTask(fanTaskHandle);
 
     digitalWrite(SSR_FAN_PIN, LOW);
     digitalWrite(SSR_HEATER_PIN, LOW);
