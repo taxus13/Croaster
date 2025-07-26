@@ -19,7 +19,8 @@
 
 #define DHT22_PIN GPIO_NUM_4
 #define NTC_PIN GPIO_NUM_32
-#define SSR_FAN_PIN GPIO_NUM_26
+#define ZC_FAN_PIN GPIO_NUM_13
+#define OUT_FAN_PIN GPIO_NUM_12
 #define SSR_HEATER_PIN GPIO_NUM_27
 
 #endif

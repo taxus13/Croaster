@@ -4,49 +4,22 @@
 #include "PinConfig.h"
 
 
-RoasterControl::RoasterControl(int32_t cycleFan_ms, int32_t cycleHeat_ms) : cycleFan_ms(cycleFan_ms), cycleHeat_ms(cycleHeat_ms)
+RoasterControl::RoasterControl(int32_t cycleHeat_ms) : cycleHeat_ms(cycleHeat_ms), fanDimmer(OUT_FAN_PIN, ZC_FAN_PIN)
 {
 }
 
 void RoasterControl::begin()
 {
-    pinMode(SSR_FAN_PIN, OUTPUT);
     pinMode(SSR_HEATER_PIN, OUTPUT);
-    digitalWrite(SSR_FAN_PIN, LOW);
     digitalWrite(SSR_HEATER_PIN, LOW);
+    fanDimmer.begin(NORMAL_MODE, OFF);
 
-
-}
-
-void RoasterControl::startFanSSR(void *param)
-{
-    RoasterControl* self = static_cast<RoasterControl*>(param);
-    self->SSRTaskFan(SSR_FAN_PIN, self->cycleFan_ms, self->fanLevel);
 }
 
 void RoasterControl::startHeaterSSR(void *param)
 {
     RoasterControl* self = static_cast<RoasterControl*>(param);
     self->SSRTaskHeater(SSR_HEATER_PIN, self->cycleHeat_ms, self->heatLevel);
-}
-
-void RoasterControl::SSRTaskFan(const uint8_t ssr_pin, const int32_t cycle_ms, volatile int32_t& level)
-{
-    while (true) {
-
-        int onTime = (cycle_ms * level) / 100;
-        if (onTime > 0) {
-            digitalWrite(ssr_pin, HIGH);
-            // Serial.printf("Pin %d on\n", ssr_pin);
-            vTaskDelay(pdMS_TO_TICKS(onTime));
-        }
-        int offTime  = (cycle_ms * (100 - level)) / 100;
-        if (offTime > 0) {
-            digitalWrite(ssr_pin, LOW);
-            // Serial.printf("Pin %d off\n", ssr_pin);
-            vTaskDelay(pdMS_TO_TICKS(offTime));
-        }
-    }
 }
 
 void RoasterControl::SSRTaskHeater(const uint8_t ssr_pin, const int32_t cycle_ms, volatile int32_t& level)
@@ -112,9 +85,7 @@ void RoasterControl::startCool()
     heatLevel = 0;
     fanLevel = MAX_LEVEL;
     // Immedietly disable the heating element and turn on the fan
-    // stopTask(heatTaskHandle);
-    digitalWrite(SSR_FAN_PIN, HIGH);
-    digitalWrite(SSR_HEATER_PIN, LOW);
+    fanDimmer.setPower(MAX_LEVEL);
     Serial.printf("startCool. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 }
 
@@ -126,8 +97,10 @@ void RoasterControl::stopRoast()
     // stopTask(heatTaskHandle);
     // stopTask(fanTaskHandle);
 
-    digitalWrite(SSR_FAN_PIN, LOW);
     digitalWrite(SSR_HEATER_PIN, LOW);
+    fanDimmer.setState(OFF);
+    fanDimmer.setPower(0);
+
     Serial.printf("stopRoast. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 
 }
@@ -183,18 +156,8 @@ void RoasterControl::setFan(int32_t percentage)
     }
     fanLevel = percentage;
 
-    if (fanTaskHandle == nullptr) {
-        Serial.println("Fan task not running, starting...");
-        xTaskCreatePinnedToCore(
-            &RoasterControl::startFanSSR,
-            "FanSSRTask",
-            4096,
-            this,
-            1,
-            &fanTaskHandle,
-            1
-        );
-    }
+    fanDimmer.setState(ON);
+    fanDimmer.setPower(fanLevel);
 
     Serial.printf("Received fan percentage. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 }

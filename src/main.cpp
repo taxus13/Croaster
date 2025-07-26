@@ -33,7 +33,7 @@ CroasterCore croaster(dummyMode);
 DHTHandler dhtHandler(DHT22_PIN);
 NTCHandler ntcHandler(NTC_PIN, 5);
 
-RoasterControl roasterControl(CYCLE_TIME_FAN_MS, CYCLE_TIME_HEAT_MS);
+RoasterControl roasterControl(CYCLE_TIME_HEAT_MS);
 DisplayManager displayManager(croaster, dhtHandler, ntcHandler, roasterControl);
 CommandHandler commandHandler(croaster, displayManager, roasterControl);
 
