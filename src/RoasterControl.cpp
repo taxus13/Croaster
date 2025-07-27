@@ -4,7 +4,7 @@
 #include "PinConfig.h"
 
 
-RoasterControl::RoasterControl(int32_t cycleHeat_ms) : cycleHeat_ms(cycleHeat_ms), fanDimmer(OUT_FAN_PIN, ZC_FAN_PIN)
+RoasterControl::RoasterControl(int32_t cycleHeat_ms) : cycleHeat_ms(cycleHeat_ms), dimmer(OUT_FAN_PIN, ZC_FAN_PIN)
 {
 }
 
@@ -12,7 +12,7 @@ void RoasterControl::begin()
 {
     pinMode(SSR_HEATER_PIN, OUTPUT);
     digitalWrite(SSR_HEATER_PIN, LOW);
-    fanDimmer.begin(NORMAL_MODE, OFF);
+    dimmer.begin();
 
 }
 
@@ -85,7 +85,7 @@ void RoasterControl::startCool()
     heatLevel = 0;
     fanLevel = MAX_LEVEL;
     // Immedietly disable the heating element and turn on the fan
-    fanDimmer.setPower(MAX_LEVEL);
+    dimmer.setPowerLevel(MAX_LEVEL);
     Serial.printf("startCool. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 }
 
@@ -98,8 +98,8 @@ void RoasterControl::stopRoast()
     // stopTask(fanTaskHandle);
 
     digitalWrite(SSR_HEATER_PIN, LOW);
-    fanDimmer.setState(OFF);
-    fanDimmer.setPower(0);
+    dimmer.powerOff();
+    dimmer.setPowerLevel(0);
 
     Serial.printf("stopRoast. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 
@@ -155,9 +155,12 @@ void RoasterControl::setFan(int32_t percentage)
         return;
     }
     fanLevel = percentage;
-
-    fanDimmer.setState(ON);
-    fanDimmer.setPower(fanLevel);
+    if (fanLevel == 0) {
+        dimmer.powerOff();
+    } else {
+        dimmer.powerOn();
+        dimmer.setPowerLevel(fanLevel);
+    }
 
     Serial.printf("Received fan percentage. Current values H=%d,F=%d\n", heatLevel, fanLevel);
 }

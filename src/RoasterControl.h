@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "RBDdimmer.h"
+#include "DimmerControl.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -20,7 +20,7 @@ private:
     volatile int32_t heatLevel = 0;
     volatile int32_t fanLevel = 0;
     const int32_t cycleHeat_ms = 0;
-    dimmerLamp fanDimmer;
+    DimmerControl dimmer;
 
 
     TaskHandle_t heatTaskHandle = nullptr;
