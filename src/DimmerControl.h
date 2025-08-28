@@ -47,11 +47,18 @@ public:
     void powerOff();
     void powerOn();
 private:
+    static void startDimmerTask(void* param);
+
     void IRAM_ATTR zeroCrossISR();
+    void dimmerControl();
+
+    TaskHandle_t dimmerTaskHandle = nullptr;
+
     const uint8_t zc_pin;
     const uint8_t triac_pin;
 
     volatile int currentDealy = 0;
     volatile bool enabled = false;
+    volatile bool zc_detected = false;
 };
 

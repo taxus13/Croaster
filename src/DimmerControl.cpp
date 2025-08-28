@@ -21,6 +21,17 @@ void DimmerControl::begin() {
     // FALLING: Viele ZCD-Module erzeugen einen FALLING-Edge beim Nulldurchgang.
     //          Manchmal auch RISING. Das hängt vom Modul ab.
     attachInterrupt(digitalPinToInterrupt(zc_pin), std::bind(&DimmerControl::zeroCrossISR, this), FALLING);
+
+    xTaskCreatePinnedToCore(
+            &DimmerControl::startDimmerTask,
+            "FanDimmerTask",
+            4096,
+            this,
+            1,
+            &startDimmerTask,
+            1
+        );
+
 }
 
 void DimmerControl::setPowerLevel(uint8_t level)
@@ -57,6 +68,33 @@ void DimmerControl::setPowerLevel(uint8_t level)
     currentDealy = (long)interpolatedDelay;
 }
 
+void DimmerControl::dimmerControl()
+{
+    while (true) {
+        if (!enabled) {
+            digitalWrite(triac_pin, LOW);
+            delayMicroseconds(100);
+            continue;
+        }
+        if (enabled && zc_detected) {    
+            zc_detected = false;
+            int delayTimeUs = currentDealy;
+            if (delayTimeUs < HALF_CYCLE_US - MIN_US_PULSE) {
+                delayMicroseconds(delayTimeUs);
+                digitalWrite(triac_pin, HIGH);
+                delayMicroseconds(MIN_US_PULSE);
+                digitalWrite(triac_pin, LOW);
+            } else {
+                digitalWrite(triac_pin, LOW);
+            }
+        } else {
+            delayMicroseconds(10);
+
+        }
+        
+    }
+}
+
 void DimmerControl::powerOff()
 {
     enabled = false;
@@ -67,18 +105,14 @@ void DimmerControl::powerOn()
     enabled = true;
 }
 
+void DimmerControl::startDimmerTask(void *param)
+{
+    Serial.println("Dimmer task not running, starting...");
+
+    DimmerControl* self = static_cast<DimmerControl*>(param);
+    self->dimmerControl();
+}
+
 void IRAM_ATTR DimmerControl::zeroCrossISR() {
-    if (!enabled) {
-        digitalWrite(triac_pin, LOW);
-        return;
-    }
-    int delayTimeUs = currentDealy;
-    if (delayTimeUs < HALF_CYCLE_US - MIN_US_PULSE) {
-        delayMicroseconds(delayTimeUs);
-        digitalWrite(triac_pin, HIGH);
-        delayMicroseconds(MIN_US_PULSE);
-        digitalWrite(triac_pin, LOW);
-    } else {
-        digitalWrite(triac_pin, LOW);
-    }
+    zc_detected = true;
 }
