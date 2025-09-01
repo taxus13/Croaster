@@ -3,6 +3,8 @@
 #include "Arduino.h"
 #include <FunctionalInterrupt.h>
 
+DimmerControl* DimmerControl::s_instance = nullptr;
+
 DimmerControl::DimmerControl(uint8_t triac_pin, uint8_t zc_pin) : triac_pin(triac_pin), zc_pin(zc_pin)
 {
 }
@@ -12,6 +14,7 @@ DimmerControl::~DimmerControl()
 }
 
 void DimmerControl::begin() {
+    DimmerControl::s_instance = this;
     // Pins als Output bzw. Input_Pullup konfigurieren
     pinMode(triac_pin, OUTPUT);
     digitalWrite(triac_pin, LOW); // Sicherstellen, dass der Triac aus ist
@@ -20,17 +23,10 @@ void DimmerControl::begin() {
     // Attach interrupt for zero-cross detection
     // FALLING: Viele ZCD-Module erzeugen einen FALLING-Edge beim Nulldurchgang.
     //          Manchmal auch RISING. Das hängt vom Modul ab.
-    attachInterrupt(digitalPinToInterrupt(zc_pin), std::bind(&DimmerControl::zeroCrossISR, this), FALLING);
+    timer = timerBegin(0, 80, true);
 
-    xTaskCreatePinnedToCore(
-            &DimmerControl::startDimmerTask,
-            "FanDimmerTask",
-            4096,
-            this,
-            1,
-            &startDimmerTask,
-            1
-        );
+    timerAttachInterrupt(timer, &DimmerControl::triacPulseISR_wrapper, true);
+    attachInterrupt(digitalPinToInterrupt(zc_pin), std::bind(&DimmerControl::zeroCrossISR, this), FALLING);
 
 }
 
@@ -38,11 +34,11 @@ void DimmerControl::setPowerLevel(uint8_t level)
 {
     // Edge cases
     if (level <= 0)  {
-        currentDealy = delayTimesUs[0];
+        currentDelay = delayTimesUs[0];
         return;
     }
     if (level >= 100) {
-        currentDealy = delayTimesUs[NUM_LUT_ENTRIES - 1];
+        currentDelay = delayTimesUs[NUM_LUT_ENTRIES - 1];
         return;
     }
 
@@ -65,35 +61,11 @@ void DimmerControl::setPowerLevel(uint8_t level)
         delayTimesUs[upperIndex]
     );
 
-    currentDealy = (long)interpolatedDelay;
+    currentDelay = (long)interpolatedDelay;
+    Serial.printf("Power level: %d: %d %d\n",level, lowerIndex, currentDelay);
 }
 
-void DimmerControl::dimmerControl()
-{
-    while (true) {
-        if (!enabled) {
-            digitalWrite(triac_pin, LOW);
-            delayMicroseconds(100);
-            continue;
-        }
-        if (enabled && zc_detected) {    
-            zc_detected = false;
-            int delayTimeUs = currentDealy;
-            if (delayTimeUs < HALF_CYCLE_US - MIN_US_PULSE) {
-                delayMicroseconds(delayTimeUs);
-                digitalWrite(triac_pin, HIGH);
-                delayMicroseconds(MIN_US_PULSE);
-                digitalWrite(triac_pin, LOW);
-            } else {
-                digitalWrite(triac_pin, LOW);
-            }
-        } else {
-            delayMicroseconds(10);
 
-        }
-        
-    }
-}
 
 void DimmerControl::powerOff()
 {
@@ -105,14 +77,32 @@ void DimmerControl::powerOn()
     enabled = true;
 }
 
-void DimmerControl::startDimmerTask(void *param)
+void IRAM_ATTR DimmerControl::triacPulseISR_wrapper()
 {
-    Serial.println("Dimmer task not running, starting...");
-
-    DimmerControl* self = static_cast<DimmerControl*>(param);
-    self->dimmerControl();
+    if (DimmerControl::s_instance) {
+        DimmerControl::s_instance->triacPulseISR();
+    }
 }
 
-void IRAM_ATTR DimmerControl::zeroCrossISR() {
-    zc_detected = true;
+void IRAM_ATTR DimmerControl::zeroCrossISR()
+{
+    timerAlarmDisable(timer);
+    timerAlarmWrite(timer, currentDelay, false);
+    timerAlarmEnable(timer);
+
+}
+
+void DimmerControl::triacPulseISR()
+{
+    if (!enabled) {
+        digitalWrite(triac_pin, LOW);
+        return;
+    }
+
+
+    digitalWrite(triac_pin, HIGH);
+    delayMicroseconds(MIN_US_PULSE);
+    digitalWrite(triac_pin, LOW);
+
+    timerAlarmDisable(timer);
 }

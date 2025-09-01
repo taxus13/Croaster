@@ -4,7 +4,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
-
+#include "driver/timer.h"
+#include "esp32-hal-timer.h"
 
 const int MIN_US_PULSE = 50;  // Minimale Pulsbreite für den Triac-Trigger
 const int HALF_CYCLE_US = 10000; // 10ms für eine halbe 50Hz-Periode
@@ -47,18 +48,19 @@ public:
     void powerOff();
     void powerOn();
 private:
-    static void startDimmerTask(void* param);
+
+    static DimmerControl* s_instance;
+    static void IRAM_ATTR triacPulseISR_wrapper();
 
     void IRAM_ATTR zeroCrossISR();
-    void dimmerControl();
+    void triacPulseISR();
 
-    TaskHandle_t dimmerTaskHandle = nullptr;
+    hw_timer_t *timer = nullptr;
 
     const uint8_t zc_pin;
     const uint8_t triac_pin;
 
-    volatile int currentDealy = 0;
+    volatile int currentDelay = 0;
     volatile bool enabled = false;
-    volatile bool zc_detected = false;
 };
 
