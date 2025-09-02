@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include "DimmerControl.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+#include "dimmable_light_linearized.h"
 
 static constexpr int32_t MIN_FAN_LEVEL_FOR_HEAT = 30; // Minimum heat level is heat is on
 static constexpr int32_t MIN_HEAT_LEVEL = 0;
@@ -20,10 +21,10 @@ private:
     volatile int32_t heatLevel = 0;
     volatile int32_t fanLevel = 0;
     const int32_t cycleHeat_ms = 0;
-    DimmerControl dimmer;
 
 
     TaskHandle_t heatTaskHandle = nullptr;
+    DimmableLightLinearized dimmer;
 public:
     RoasterControl(int32_t cycleHeat_ms);
     void begin();
